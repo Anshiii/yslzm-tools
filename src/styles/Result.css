@@ -1,0 +1,26 @@
+.result-wrap{
+    padding-top: 8px;
+}
+
+.result-item{
+    padding-top: 8px;
+    text-align: center;
+}
+.result-item>p{
+    width: 300px;
+    margin: 0 auto;
+    text-align: left;
+}
+
+.result-item-title{
+    text-align: center;
+    font-size: 18px;
+    margin-bottom: 8px;
+}
+
+.result-item-label{
+    display: inline-block;
+    width: 150px;
+    text-align: right;
+    margin-right: 4px;
+}

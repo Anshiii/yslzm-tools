@@ -1,0 +1,14 @@
+.statistics-item{
+    padding: 4px 0;
+}
+.statistics-item-label{
+    display: inline-block;
+    width: 150px;
+    text-align: right;
+}
+
+.statistics-item-interact{
+    display: inline-block;
+    width: 160px;
+    text-align: left;
+}
