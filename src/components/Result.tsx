@@ -157,7 +157,7 @@ export default function Result({ state }: ResultProps) {
 
 
     const toCalculate = () => {
-        const needCoin = toCalculateTotal(state)
+        const needCoin = toCalculateTotal(state) - state.currentSave
 
         const targetLevel = LEVEL_LIST.find(item => item.id === state.level)
         if (!targetLevel) return null;
