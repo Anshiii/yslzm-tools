@@ -3,5 +3,10 @@
 type ShopItem = {
     name: string;
     count: number;
-    position: string; 
+    position: string;
+}
+
+
+type LevelItem = {
+    name: string, id: string, day: number, week: number, count?: number
 }

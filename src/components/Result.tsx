@@ -4,20 +4,54 @@ import '../styles/Result.css'
 import dayjs from 'dayjs'
 import { useState } from 'react';
 const endDay = dayjs('2023-08-13')
-//  从时尚契合者2升到下一个 level 需要的次数 
-const countToLevel15ToNextLevelList = [1, 3, 4, 5, 7, 12, 13, 17, 33, 38, 39, 40, 41];
 const countToLevel15Idx = 13;
-const countToLevel15 = LEVEL_LIST[13]; // 15次打到时尚契合者2 下标13 日结算160 
-const countToLevel20 = LEVEL_LIST[9]; // 20次打到流行缔造3 下标9 日结算250
-const countToLevel23 = LEVEL_LIST[8]; // 23次打到首席创意1 
-const countToLevel25 = LEVEL_LIST[8]; //25次打到首席创意1 下标8 日结算275
-const countToLevel26 = LEVEL_LIST[7]; //26次打到首席创意2 
-const countToLevel29 = LEVEL_LIST[6]; //29次打到首席创意3 
-const countToLevel30 = LEVEL_LIST[6]; //30次打到首席创意3 
-const countToLevel32 = LEVEL_LIST[5]; //32次打到引领潮流之巅1
-const countToLevel35 = LEVEL_LIST[5]; //35次打到引领潮流之巅1 下标5 日结算400
-const countToLevel40 = LEVEL_LIST[4]; //40次打到引领潮流之巅2 下标4 日结算450
-const countToLevel45 = LEVEL_LIST[3]; //45次打到引领潮流之巅3 下标3 日结算500
+
+// 策略生成
+function getStrategy(impossible, weekCount?, weekReward?) {
+    if (impossible) return '无法在赛季结束前兑换完勾选部件'
+    let result = `周${1}打${weekCount[0]}次，到达${weekReward[0].name}段位。\n`;
+
+    for (let day = 1; day < 7; day++) {
+        if (weekReward[day - 1] === weekReward[6]) break
+        result += `周${day + 1}打${weekCount[day]}次，到达${weekReward[day].name}段位。\n`
+    }
+    result += `剩余天数保持${weekReward[6].name}段位，在周日结算后保留10次。`
+    return result;
+}
+
+// 通过对决次数计算最小期望级别
+function getLevelByCount(count: number): LevelItem {
+    if (count < 15) return LEVEL_LIST[countToLevel15Idx];
+    let left = 0, right = countToLevel15Idx;
+    while (left < right) {
+        let mid = left + Math.floor((right - left) * 0.5)
+        if (LEVEL_LIST[mid].count as number <= count) {
+            right = mid
+        } else {
+            left = mid + 1;
+        }
+    }
+    return LEVEL_LIST[left];
+}
+
+// 计算达到需求的最小起点
+function getMinLevelInMonday(startLevelIdx, endLevelIdx, needCoin, weekCount): LevelItem {
+    let left = endLevelIdx, right = startLevelIdx;
+    while (left < right) {
+        let mid = left + Math.floor((right - left) * 0.5)
+        let { total: result } = toGetResultFromStartCountAndMaxLevel(LEVEL_LIST[endLevelIdx], weekCount, LEVEL_LIST[mid].count);
+        console.log(`needCoin:${needCoin} result:${result} mid:${mid}`);
+        if (result <= needCoin) {
+            right = mid
+        } else {
+            left = mid + 1;
+        }
+    }
+    console.log(`return ${left}`);
+    return LEVEL_LIST[left - 1];
+}
+
+
 
 type ResultProps = {
     state: any
@@ -36,8 +70,6 @@ const toCalculateTotal = (state) => {
             }
         })
     })
-    console.log(`---needed----${sum}`);
-
     return sum;
 }
 
@@ -60,44 +92,30 @@ const getTheDays: () => { weekCount: number[], diffDay: number } = () => {
         }
 
     }
-    console.log('weekCount', weekCount);
     return { weekCount, diffDay };
 
 }
 
+// 策略2：周一打N次,周二5次，周三~周日打3次
+const toGetResultFromStartCountAndMaxLevel = (maxLevel: LevelItem, weekCount: number[], startCount = 15) => {
 
-// 周一买到目标段位
-const strategyMondayToTarget = (targetLevel, weekCount) => {
+    // 一周七天每天打的次数 startCount,5,3~
+    let nextDayCount = startCount + 5;
 
-    // 次数 周一15次 周二5次 剩余3次；
-    let countRewardDayMap = {
-        0: 12, // 只有前12次会给奖励
-        1: 5,
+    // 每天打的次数
+    let weekDayCount = new Array(7).fill(3);
+    weekDayCount[0] = startCount;
+    weekDayCount[1] = 5;
+
+    // 每天到达的级别
+    let weekDayLevel = [getLevelByCount(startCount), getLevelByCount(nextDayCount)];
+    for (let i = 2; i < 7; i++) {
+        nextDayCount += 3;
+        weekDayLevel[i] = getLevelByCount(nextDayCount);
     }
-    let total = 0;
-    weekCount.forEach((dayCount, idx) => {
-        let count = countRewardDayMap[idx] || 3;
-        total += count * 5 * dayCount;
-        if (targetLevel.id >= countToLevel15.id) {
-            total += dayCount * targetLevel.day
-        } else {
-            total += dayCount * countToLevel15.day
-        }
-    });
-    //累加周日的周结算
-    total += weekCount[6] * targetLevel.week
+    // FIX LEVEL 针对 level 中超过 maxLevel 的情况做处理
+    weekDayLevel = weekDayLevel.map(item => item.id > maxLevel.id ? maxLevel : item)
 
-    console.log(`----MaxTotal---${total}`);
-
-    return total;
-}
-
-
-// 周一只打15次
-const freeCount = (targetLevel, weekCount) => {
-    // 一周七天每天打的次数 15-20-23-26-29 -32-35
-    let freeWeekLevel = [countToLevel15, countToLevel20, countToLevel23, countToLevel26, countToLevel29, countToLevel32, countToLevel35]
-    // 当前日期距离结束还剩下多少个周日，和其他
 
     // 次数 周一12次 周二5次 剩余3次；
     let countRewardDayMap = {
@@ -105,25 +123,20 @@ const freeCount = (targetLevel, weekCount) => {
         1: 5,
     }
     let total = 0;
-
     // 日结算
     weekCount.forEach((dayCount, idx) => {
         let count = countRewardDayMap[idx] || 3;
+        // 每天前12次对决的5代币
         total += count * 5 * dayCount;
-        if (targetLevel.id >= freeWeekLevel[idx].id) {
-            total += dayCount * freeWeekLevel[idx].day
-        } else {
-            total += dayCount * targetLevel.day
-        }
+        total += dayCount * weekDayLevel[idx].day
     });
 
-    let weekReward = targetLevel.id >= freeWeekLevel[6].id ? freeWeekLevel[6].week : targetLevel.week;
     //累加周日的周结算
-    total += weekCount[6] * weekReward
+    total += weekCount[6] * maxLevel.week
 
-    console.log(`----minTotal---${total}`);
-
-    return total;
+    console.log('total', total, 'weekDayLevel', weekDayLevel)
+    const textResult = getStrategy(false, weekDayCount, weekDayLevel);
+    return { total, textResult };
     // 两个极限策略
     // 1.完全不买次数
     // 2.周一买到目标段位，接下来每周至少3次，额外两次随便。（目标段位>= 时尚契合者2）
@@ -131,6 +144,7 @@ const freeCount = (targetLevel, weekCount) => {
 
 export default function Result({ state }: ResultProps) {
     const [resultRecord, setResultRecord] = useState({
+        impossible: false,
         needCoin: 0,
         needBuyCount: 0,
         needBuyCountMonday: 0,
@@ -138,51 +152,67 @@ export default function Result({ state }: ResultProps) {
         getDiamond: 0,
         getCoin: 0,
         diffDay: 0,
+        result: '',
     })
 
 
     const toCalculate = () => {
         const needCoin = toCalculateTotal(state)
-        console.log(`---需要的代币total---`, needCoin);
 
         const targetLevel = LEVEL_LIST.find(item => item.id === state.level)
         if (!targetLevel) return null;
 
-        const targetAndCountToLevel15DiffLevel = countToLevel15Idx - LEVEL_LIST.indexOf(targetLevel);
+        const targetLevelIdx = LEVEL_LIST.indexOf(targetLevel);
+        const targetAndCountToLevel15DiffLevel = countToLevel15Idx - targetLevelIdx;
 
 
         const { weekCount: dayCount, diffDay } = getTheDays();
         let needBuyCount = 0;
         let needBuyCountMonday = 0;
 
-        // 周一需要买次数
-        if (targetAndCountToLevel15DiffLevel > 0 && state.strategy !== 'free') {
-            needBuyCountMonday = countToLevel15ToNextLevelList[targetAndCountToLevel15DiffLevel]
+        // 第一天打15次
+        const { total: minGet, textResult: minTextResult } = toGetResultFromStartCountAndMaxLevel(targetLevel, dayCount);
+        // 第一天打目标段位次数
+        const { total: maxGet, textResult: maxTextResult } = toGetResultFromStartCountAndMaxLevel(targetLevel, dayCount, targetLevel.count);
+        let impossible = false;
+
+        let getCoin = 0;
+        let result = '';
+        if (maxGet < needCoin) {
+            // 达不到目标
+            impossible = true
+            getCoin = maxGet;
+            result = getStrategy(impossible)
+        } else if (minGet > needCoin) {
+            // 第一天不买次数
+            impossible = false;
+            getCoin = minGet
+            result = minTextResult
+        } else {
+            // 第一天需要买，看看买几天
+            let suitableLevel = getMinLevelInMonday(countToLevel15Idx, targetLevelIdx, needCoin, dayCount);
+            const { total: suitableGet, textResult } = toGetResultFromStartCountAndMaxLevel(targetLevel, dayCount, suitableLevel.count)
+            needBuyCountMonday = suitableLevel.count as number - 15;
             needBuyCount = dayCount[0] * needBuyCountMonday;
-
+            getCoin = suitableGet;
+            result = textResult
         }
-
-        const minGet = freeCount(targetLevel, dayCount);
-        const maxGet = strategyMondayToTarget(targetLevel, dayCount);
-
-        const getCoinMap = {
-            free: minGet,
-            buyMaxCount: maxGet,
-        }
-        const getCoin = getCoinMap[state.strategy];
 
         setResultRecord({
+            impossible,
             needCoin,
             needBuyCount,
             needBuyCountMonday,
             needBuyCountDiamond: needBuyCount * 10,
             getDiamond: diffDay * 5 * 3,
             getCoin,
-            diffDay
+            diffDay,
+            result,
+
         })
-        console.log(`total`, minGet, maxGet);
     }
-    console.log(`resultRecord`, resultRecord);
+
+    console.log('resultRecord', resultRecord)
 
     return <div className="result-wrap">
         <button className="result-action" onClick={toCalculate}>开始计算</button>
@@ -190,18 +220,17 @@ export default function Result({ state }: ResultProps) {
         <div className="result-item">
             <div className="result-item-title">计算结果：</div>
 
-
-
             <p><span className="result-item-label">获得代币数量:</span>{resultRecord.getCoin}</p>
             <p><span className="result-item-label">所需代币数量:</span>{resultRecord.needCoin}</p>
             <p><span className="result-item-label">周一买次数:</span>{resultRecord.needBuyCountMonday}</p>
-            <p><span className="result-item-label">消耗钻石总量:</span>{resultRecord.needBuyCountDiamond}</p>
-            <p><span className="result-item-label">获得钻石总量:</span>{resultRecord.getDiamond}</p>
-            <p><span className="result-item-label">赛季剩余天数:</span>{resultRecord.diffDay}</p>
+            {/* <p><span className="result-item-label">消耗钻石总量:</span>{resultRecord.needBuyCountDiamond}</p> */}
+            {/* <p><span className="result-item-label">获得钻石总量:</span>{resultRecord.getDiamond}</p> */}
+            {/* <p><span className="result-item-label">赛季剩余天数:</span>{resultRecord.diffDay}</p> */}
+            <p><span className="result-item-label">策略概括:</span>
+                <br />
+                <span>{resultRecord.result}</span>
+            </p>
 
-            <div>
-
-            </div>
         </div>
     </div>
 }

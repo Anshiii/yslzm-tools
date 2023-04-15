@@ -54,7 +54,7 @@ export default function Statistics({state,dispatch }: StatisticsProps) {
                 />
             </div>
         </li>
-        <li className="statistics-item">
+        {/* <li className="statistics-item">
             <span className="statistics-item-label"
                 style={
                     { verticalAlign: 'top' }
@@ -69,7 +69,6 @@ export default function Statistics({state,dispatch }: StatisticsProps) {
                 />
                 <div>策略概述&gt;&gt;&gt;周一15次机会到~</div>
             </div>
-
-        </li>
+        </li> */}
     </ul>
 }
