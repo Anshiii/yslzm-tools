@@ -8,15 +8,15 @@ export const JJC_SHOP_TAB = [
         id: 'fiveSet'
     },
     {
-        name: '专用色卡',
+        name: '色卡',
         id: 'colorCard'
     },
     {
-        name: '时尚妆容',
+        name: '妆容',
         id: 'makeup'
     },
     {
-        name: '聊天道具',
+        name: '道具',
         id: 'chat'
     }
 ]

@@ -1,10 +1,6 @@
-import { useEffect, useReducer, useState } from "react"
-import { JJC_SHOP_ITEM, JJC_SHOP_TAB, JJC_SHOP_TAB_LIST } from "../constant/Shop";
+import { useState } from "react"
+import { JJC_SHOP_ITEM, JJC_SHOP_TAB } from "../constant/Shop";
 import '../styles/Shop.css'
-import { simpleUpdateState } from "../util";
-
-
-
 
 type ShopProps = {
     state: any
@@ -56,22 +52,25 @@ export default function List({ state, dispatch }: ShopProps) {
                     data-shop-current={currentTab === item.id}
                 >{item.name}({state[item.id].length})</div>)}
         </div>
-        <ul className="shop-content-wrap">
-            <li className="shop-content-header">
-                <span>位置</span>
-                <span>名称</span>
-                <span>代币数</span>
-                <span><input type="checkbox" name="selectAll" id="selectAll" checked={state[currentTab].length === JJC_SHOP_ITEM[currentTab].length} onChange={selectAll} /></span>
-            </li>
-            {JJC_SHOP_ITEM[currentTab].map((item, idx) => <li key={item.name} className="shop-content-body">
-                <div >
-                    <span>{item.position}</span>
-                    <span>{item.name}</span>
-                    <span>{item.count}</span>
-                    <span> <input type="checkbox" name={item.name} id={item.name} checked={state[currentTab].includes(item.name)} onChange={checkboxChange} /></span>
-                </div>
-            </li>)}
-        </ul>
+        <table className="shop-content-wrap">
+            <thead className="shop-content-header">
+                <tr>
+                    <th>位置</th>
+                    <th>名称</th>
+                    <th>代币数</th>
+                    <th><input type="checkbox" name="selectAll" id="selectAll" checked={state[currentTab].length === JJC_SHOP_ITEM[currentTab].length} onChange={selectAll} /></th>
+                </tr>
+            </thead>
+            <tbody>
+                {JJC_SHOP_ITEM[currentTab].map((item, idx) => <tr key={item.name} className="shop-content-body">
+                    <td>{item.position}</td>
+                    <td>{item.name}</td>
+                    <td>{item.count}</td>
+                    <td> <input type="checkbox" name={item.name} id={item.name} checked={state[currentTab].includes(item.name)} onChange={checkboxChange} /></td>
+                </tr>)}
+            </tbody>
+
+        </table>
 
     </section>
 }

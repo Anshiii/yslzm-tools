@@ -1,11 +1,13 @@
 .shop{
     padding-bottom: 16px;
 }
+
 .shop-tab-wrap{
     display: flex;
     justify-content: center;
     margin-bottom: 4px;
 }
+
 .shop-tab-item{
     padding: 1px 2px;
     border:1px solid rgb(214, 214, 214);
@@ -13,27 +15,13 @@
     color: gray;
 }
 
-.shop-content-header span,.shop-content-body span{
-    border-bottom: 1px solid rgb(214, 214, 214);
-    border-right: 1px solid rgb(214, 214, 214);
-    width: 68px;
-    box-sizing: border-box;
-    display: inline-block;
-    height: 24px;
-    line-height: 24px;
-    text-align: center;
+.shop-content-wrap{
+    margin: 0 auto;
 }
 
-.shop-content-header span:nth-child(2),.shop-content-body span:nth-child(2){
-    width: 125px;
-}
-
-.shop-content-header span{
-    border-top: 1px solid rgb(214, 214, 214);
-}
-
-.shop-content-body span:nth-child(1),.shop-content-header span:nth-child(1){
-    border-left: 1px solid rgb(214, 214, 214);
+.shop-content-wrap td,.shop-content-wrap th{
+    border: 1px solid rgb(214, 214, 214);
+    padding: 2px 4px;
 }
 
 .shop-tab-item[data-shop-current="true"]{
